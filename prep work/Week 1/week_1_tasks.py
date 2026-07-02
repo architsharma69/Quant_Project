@@ -60,7 +60,7 @@ def spread_and_liquidity():
             rel_spread = spread / price
             print(f"abs spread: {spread}\nspread relative to price: {round(rel_spread * 100, 3)}%")
         else:
-            print("Couldn't retrive eenough info")
+            print("Couldn't retrive enough info")
 
 
 if __name__ == "__main__":
