@@ -5,7 +5,14 @@ PE Ratio is calculated by:
 * Price doesn't need to be explained
 * Earnings Per Share: Earnings can be taken from current FY, trailing 4 quarters, or expected
 
+# Max Drawdown
+Simply, the largest drop in the price of a stock / value of a portfolio, as a percentage of the peak price. As long as a new peak is not achieved, the stock is still taken to be at a loss. A price becomes a new peak only after it surpasses the original peak. 
 
+# Volume (Annualised)
+* Volume of a share over a period is simply the number of shares traded over that period of time
+    * Higher volume indicates a more liquid market
+    
+To annualise something just means that you are calculating that metric over a period of a year, e.g. annualised return, annualised volume, annualised volatility
 
 # Historical Volatility
 Simply, the volatility of the price of a stock / return of a portfolio over a period of time, typically measured using *standard deviation*. It can be used to measure **risk**.
@@ -31,4 +38,4 @@ Variance or Std Dev simply aggregate all differences in price from the mean. The
 While sharpe ratio $>1$ is generally good, you should compare Sharpe Ratios of a fund / security in comparison to its peers.
 
 # Rate of Return
-For a security / portfolio - quite obvious, the percentage change in value divided by initial / buying price
+For a security / portfolio - quite obvious:  change in value $\div$ by initial price, as a percentage.

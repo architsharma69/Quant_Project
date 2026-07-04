@@ -1,5 +1,6 @@
 import yfinance as yf
 import matplotlib.pyplot as plt
+import numpy as np
 import math
 
 
@@ -62,6 +63,42 @@ def spread_and_liquidity():
         else:
             print("Couldn't retrive enough info")
 
+def metrics(period = 12, disp = False):
+    """
+    If disp, create html view of dashboard, else output in terminal. 
+    Sampled in monthly intervals, period is the overall time period, in months
+    """
+    tickers = ['AAPL']
+    for name in tickers:
+        ticker = yf.Ticker(name)
+        data = ticker.history(period = f"{period}mo", end = "2026-06-01", interval = "1d")
+        ANNUALISATION_FACTOR = 252 / (len(data) - 1) # no. of trading days / no. of days measured
+
+        ann_vol = round(data['Volume'].sum() * ANNUALISATION_FACTOR, 2) # sum of daily volumes * annualisation factor
+        close = data['Close']
+        ann_return = round(((close.iloc[-1] - close.iloc[0]) / close.iloc[0])* 100 * ANNUALISATION_FACTOR, 2) # total return over the period measured * ann factor
+
+        # for max drawdown, we look for the minimum price before a new peak
+        max_drawdown = 0
+        for price in close:
+            peak = close.iloc[0]
+            if price >= peak:
+                peak = price
+            drawdown = ((peak - price) / peak) * 100
+            if drawdown > max_drawdown:
+                max_drawdown = round(drawdown, 2)
+
+        PE = round(ticker.info.get('currentPrice') / ticker.info.get("trailingEps"), 2) #PE ratio. Trailing EPS uses earnings over the past 12 month period
+
+        ex_returns = np.array([((close.iloc[i] - close.iloc[i-1]) / close.iloc[i])*100 - (5/252) for i in range(1, len(close))])
+        sharpe = round((np.mean(ex_returns) / np.std(ex_returns)) * np.sqrt(252), 2) # multiply by sqrt of number of periods in a year
+
+        print(f'ann_vol = {ann_vol}\nann_return = {ann_return}\nmax_drawdown = {max_drawdown}\nPE = {PE}\nsharpe = {sharpe}')
+
+
+
+def metrics_dashboard():
+    pass
 
 if __name__ == "__main__":
-    spread_and_liquidity()
+    metrics(period = 12)
