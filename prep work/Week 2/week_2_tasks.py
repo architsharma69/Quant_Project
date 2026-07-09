@@ -40,5 +40,12 @@ def cross_sectional_returns():
     plt.tight_layout()
     plt.show()
 
+def momentum_ranking():
+    """
+    An introduction to factor investing using momentum: 
+    Rank the 20 stocks from the previous task based on their 12-2 Momentum values, visualise with bar graph
+    """
+    pass
+
 if __name__ == '__main__':
     cross_sectional_returns()

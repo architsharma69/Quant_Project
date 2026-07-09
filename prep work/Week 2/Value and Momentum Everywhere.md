@@ -1,0 +1,34 @@
+# Definitions of value and momentum
+Both value and momentum are **factors** - they are related (or theorized to be related) to returns. These factors' relations to return are explained as two effects:
+* The **value effect** - How the ratio of an asset's book (long-run) value to its current market value affects returns
+* The **momentum effect** - How an asset's recent relative performance history affects returns
+
+# How these factors are measured for each asset
+**Value**: Measured using the book-to-market ratio, *BE/ME*
+*Formula: Book Value (Assets - Liabilities) $\div$ Market Cap*
+
+**Momentum**: Past 12-month cumulative raw return (*MOM2-12*), skipping the most recent month
+*Formula: [ (Close @ end of 2nd-last month $\div$ Close @ end of 12th-last month) - 1] x 100
+
+## Factor measurement $\rightarrow$ Signal
+In the AQR paper, there are **no further calculations** done to the value and momentum values. The raw values are taken as signal values.
+
+# How portfolios are typically constructed in research and real-life applications
+The AQR paper constructed its own portfolio to test out the implications of its theory. However, this construction is a general method for constructing portfolios:
+
+* *Long-Short Portfolio*: A portfolio consisting of both long and short positions - some stocks are shorted and some are bought
+* *Signal*: A score given to a security - meant to tell the **predicted direction and magnitude** of future returns
+    * Positive means buy, Negative means sell
+    * We construct the signal based on algorithms / factors (e.g. value or momentum)
+* *Weights*: A value given to a security - meant to tell **how much** of the security to keep in the portfolio
+    * In a long / short portfolio, negative signal means take a short position, magnitude of the negative signal tells us how much to sell
+
+
+# How does the AQR paper construct its portfolio
+The goal of the paper is to use **value** and **momentum** as factors to predict the future returns of securities, to verify the theory that these factors are strongly correlated with returns.
+* Constructs its portfolio with equal capital on both sides (long and short)
+    * By doing so, it gives equal weightage to securities that increase and those that decrease in price - as a result, broader market direction has a lower effect on returns, and we observe purely the effect of value / momentum
+* Assigns weights based on signal rankings, not raw signal scores
+    * Calculation is: $w_{i, t} = Rank(S_{i,t}) - [\frac{\sum_{k = 0}^N Rank(S_{k, t})}{N}]$
+    * This way, even if a signal for a security is disproportionally large, it won't be given a disproportionally large weight
+    * Since it allows for positive and negative signals, all signals add to 0
