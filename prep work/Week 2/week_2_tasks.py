@@ -3,19 +3,23 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 import numpy as np
 import math
+from datetime import datetime
+
+today_date = datetime.now()
+
+securities = ["NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "AVGO", "GOOG", "META", "TSLA", "MU", "JPM", "LLY", "AMD", "XOM", "WMT", "INTC", "JNJ", "V", "COST", "GE"]
+sec_names = " ".join([security for security in securities])
+stocks = yf.Tickers(sec_names).tickers
 
 def cross_sectional_returns():
     """
     Over a period of one year, compare 20 different S&P 500 securities by their monthly returns
     For each security, we graph its average monthly return, and separately, its return volatility (stdev) 
     """
-    securities = ["NVDA", "AAPL", "MSFT", "AMZN", "GOOGL", "AVGO", "GOOG", "META", "TSLA", "MU", "JPM", "LLY", "AMD", "XOM", "WMT", "INTC", "JNJ", "V", "COST"]
-    sec_names = " ".join([security for security in securities])
-
     avg_log_ret = lambda ser: (np.log(ser / ser.shift(1)).dropna()).mean()
     ret_stdev = lambda ser: (np.log(ser / ser.shift(1)).dropna()).std(ddof = 0)
 
-    stocks = yf.Tickers(sec_names).tickers
+    # Modify the {tickername: tickerobj} dict to hold series of close prices as values instead
     for security in securities:
         ticker = stocks[security]
         stocks[security] = ticker.history(period = f"1y", end = "2026-06-01", interval = "1mo")["Close"]
@@ -40,12 +44,70 @@ def cross_sectional_returns():
     plt.tight_layout()
     plt.show()
 
+def long_short_portfolio(signal_rank, returns):
+    """
+    `signal_rank` is a dict which maps security name --> ranking, `returns` is a dict which maps security name --> next month return
+    """
+    num = len(signal_rank.keys())
+
+    scaling_factor = sum(list(range((num + 1) / 2, ))) # This ensures that the sum of weights on both the long and short side is 1
+    weight = lambda sec: (signal_rank[sec] - (num + 1) / 2) / scaling_factor # Negative weight means sell, positive means buy
+
+    abs_returns = sum([returns[sec] * weight(sec) for sec in securities]) # return * weight gives us the actual return to the portfolio due to that security
+    rel_returns = (abs_returns / 2) * 100
+
+    return rel_returns
+
+
+
 def momentum_ranking():
     """
     An introduction to factor investing using momentum: 
     Rank the 20 stocks from the previous task based on their 12-2 Momentum values, visualise with bar graph
     """
-    pass
+    # Momentum equation for a single ticker, given 1y series of close prices (12 close prices)
+    mom = lambda ser: ((ser.iloc[-2] - ser.iloc[0]) / ser.iloc[0]) * 100
+    m1_ret = lambda ser: ((ser.iloc[-1] - ser.iloc[-2]) / ser.iloc[-2]) * 100
+
+    # Modify the {tickername: tickerobj} dict to hold series of close prices as values instead
+    for security in securities:
+        ticker = stocks[security]
+        stocks[security] = ticker.history(period = f"1y", end = today_date, interval = "1mo")["Close"]
+
+    momentums = [mom(stocks[security]) for security in securities]
+    next_month_returns = [m1_ret(stocks[security]) for security in securities]
+
+    mom_pairs = sorted(zip(momentums, securities), key=lambda x: x[0], reverse=True)
+    momentum_sorted = [pair[0] for pair in mom_pairs]
+    momentum_labels = [pair[1] for pair in mom_pairs]
+
+    return_pairs = sorted(zip(next_month_returns, securities), key=lambda x: x[0], reverse=True)
+    return_sorted = [pair[0] for pair in return_pairs]
+    return_labels = [pair[1] for pair in return_pairs]
+
+    momentum_rank = {security: rank + 1 for rank, (_, security) in enumerate(mom_pairs)}
+    return_rank = {security: rank + 1 for rank, (_, security) in enumerate(return_pairs)}
+    for security in securities:
+        print(f'{security}: Momentum ranking: {momentum_rank[security]}, Return Ranking: {return_rank[security]}')
+
+    # Plot
+    fig, (plot, plot2) = plt.subplots(2, 1, figsize = (12,10))
+
+    bars = plot.bar(momentum_labels, momentum_sorted, color='salmon')
+    plot.set_title(f'12-2 Momentum upto {today_date.strftime('%d/%m/%y')}')
+    plot.set_ylabel('Percentage Momentum')
+    plot.bar_label(bars, padding=3)
+    plot.set_ylim(min(momentums) - 50, max(momentums) * 1.1)
+
+    bars2 = plot2.bar(return_labels, return_sorted, color='skyblue')
+    plot2.set_title(f'Final month return')
+    plot2.set_ylabel('Percentage 1-month returns')
+    plot2.bar_label(bars2, padding=3)
+    plot2.set_ylim(min(next_month_returns) - 10, max(next_month_returns) * 1.1)
+
+
+    plt.tight_layout()
+    plt.show()
 
 if __name__ == '__main__':
-    cross_sectional_returns()
+    momentum_ranking()

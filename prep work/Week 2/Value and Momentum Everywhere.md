@@ -32,3 +32,11 @@ The goal of the paper is to use **value** and **momentum** as factors to predict
     * Calculation is: $w_{i, t} = Rank(S_{i,t}) - [\frac{\sum_{k = 0}^N Rank(S_{k, t})}{N}]$
     * This way, even if a signal for a security is disproportionally large, it won't be given a disproportionally large weight
     * Since it allows for positive and negative signals, all signals add to 0
+
+
+# Reflections from the 12-2 Momentum Ranking Task
+In this task, I graph the 12-2 momentum ranking of 19 separate tickers, comparing that with the 1-month return of the subsequent month. Here, since momentum is our signal, the ranking of return should correspond with the ranking of momentum.
+
+**However**, there actually seems to be very little correlation between the signal and the next month's return. In order to simulate how a long-short portfolio would perform, I carried out the same simulation as in the AQR paper - $1 USD Long, \$1 USD short. We then see our portfolio returns the next month.
+
+**Why?** This could be due to general market movements
