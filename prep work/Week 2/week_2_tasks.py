@@ -46,18 +46,27 @@ def cross_sectional_returns():
 
 def long_short_portfolio(signal_rank, returns):
     """
-    `signal_rank` is a dict which maps security name --> ranking, `returns` is a dict which maps security name --> next month return
+    `signal_rank` is a dict which maps security name --> ranking, `returns` is a dict which maps security name --> next month return, in % return
     """
-    num = len(signal_rank.keys())
+    num = len(signal_rank.keys())           # Just the number of securities
 
-    scaling_factor = sum(list(range((num + 1) / 2, ))) # This ensures that the sum of weights on both the long and short side is 1
-    weight = lambda sec: (signal_rank[sec] - (num + 1) / 2) / scaling_factor # Negative weight means sell, positive means buy
+    # Scaling Factor: The weight for each stock tells us how much of our capital we are putting in that stock.
+    # In a portfolio with $1 long and $1 short, the weights on both sides must add up to one respectively, since the total capital on each side is $1
+    # Now, the raw weight comes from the difference of the security's ranking from the mean ranking, then,
+    # Final weight is raw weight normalised, i.e. divided by sum of all raw weights
+    raw_weights = [rank - ((num + 1) / 2) for rank in range(math.ceil(num / 2) + 1, num + 1, 1)]
 
-    abs_returns = sum([returns[sec] * weight(sec) for sec in securities]) # return * weight gives us the actual return to the portfolio due to that security
+    scaling_factor = 1 / sum(raw_weights)
+
+    weight = lambda sec: (signal_rank[sec] - (num + 1) / 2) * scaling_factor # Negative weight means sell, positive means buy
+
+    print("\n################# Simulate a Long-Short Portfolio, with $2 capital injection ######################")
+    for sec in securities:
+        print(f'{sec}: Weight = {weight(sec)}, % Return = {round(returns[sec], 4)}, Absolute return = {round(returns[sec] * weight(sec), 4)}        {'PROFIT' if returns[sec] * weight(sec) > 0 else 'LOSS'}')
+    abs_returns = sum([(returns[sec] / 100) * weight(sec) for sec in securities]) # return * weight gives us the absolute return to the portfolio due to that security
     rel_returns = (abs_returns / 2) * 100
 
-    return rel_returns
-
+    return (2 + abs_returns, rel_returns)
 
 
 def momentum_ranking():
@@ -77,18 +86,23 @@ def momentum_ranking():
     momentums = [mom(stocks[security]) for security in securities]
     next_month_returns = [m1_ret(stocks[security]) for security in securities]
 
-    mom_pairs = sorted(zip(momentums, securities), key=lambda x: x[0], reverse=True)
+    mom_pairs = sorted(zip(momentums, securities), key=lambda x: x[0], reverse=False)
     momentum_sorted = [pair[0] for pair in mom_pairs]
     momentum_labels = [pair[1] for pair in mom_pairs]
 
-    return_pairs = sorted(zip(next_month_returns, securities), key=lambda x: x[0], reverse=True)
+    return_pairs = sorted(zip(next_month_returns, securities), key=lambda x: x[0], reverse=False)
     return_sorted = [pair[0] for pair in return_pairs]
     return_labels = [pair[1] for pair in return_pairs]
 
     momentum_rank = {security: rank + 1 for rank, (_, security) in enumerate(mom_pairs)}
     return_rank = {security: rank + 1 for rank, (_, security) in enumerate(return_pairs)}
+    return_values = {security: m1_ret(stocks[security]) for security in securities}
     for security in securities:
         print(f'{security}: Momentum ranking: {momentum_rank[security]}, Return Ranking: {return_rank[security]}')
+    
+    # Simulate performance of momentum factor using
+    abs_ret, rel_ret = long_short_portfolio(momentum_rank, return_values)
+    print(f"Portfolio value in the next month is: {abs_ret}.\nReturns are: {round(rel_ret, 3)}%")
 
     # Plot
     fig, (plot, plot2) = plt.subplots(2, 1, figsize = (12,10))
@@ -108,6 +122,9 @@ def momentum_ranking():
 
     plt.tight_layout()
     plt.show()
+
+def value_quality_metrics():
+    pass
 
 if __name__ == '__main__':
     momentum_ranking()

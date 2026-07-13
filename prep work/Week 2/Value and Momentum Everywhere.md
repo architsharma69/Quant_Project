@@ -35,8 +35,15 @@ The goal of the paper is to use **value** and **momentum** as factors to predict
 
 
 # Reflections from the 12-2 Momentum Ranking Task
-In this task, I graph the 12-2 momentum ranking of 19 separate tickers, comparing that with the 1-month return of the subsequent month. Here, since momentum is our signal, the ranking of return should correspond with the ranking of momentum.
+In this task, I graph the 12-2 momentum ranking of 20 separate tickers, comparing that with the 1-month return of the subsequent month. Here, since momentum is our signal, the ranking of return should correspond with the ranking of momentum.
 
-**However**, there actually seems to be very little correlation between the signal and the next month's return. In order to simulate how a long-short portfolio would perform, I carried out the same simulation as in the AQR paper - $1 USD Long, \$1 USD short. We then see our portfolio returns the next month.
+**However**, there actually seems to be very little correlation between the signal and the next month's return. If I visually compare the momentum rankings to the rankings of the next month's returns, they do not correlate. In fact, many stocks that ranked *high* in momentum, actually ranked *low* in the subsequent earnings:
 
-**Why?** This could be due to general market movements
+![Graph ranking momentum of 20 securities vs next month's earnings](Images/Momentum_Graph.png)
+
+In order to simulate how a long-short portfolio of these 20 stocks would perform, I carried out the same simulation as in the AQR paper - $1 USD Long, \$1 USD short. We then see our portfolio returns the next month:
+
+![List of stock performance](/Users/architsharma/Python/Quant_Project/Images/Portfolio_Sim.png)
+
+
+**Why?** This could be due to general market movements in the past year, such as the memory squeeze and oil shortage, muddying the momentum effect.
