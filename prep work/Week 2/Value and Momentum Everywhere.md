@@ -33,6 +33,17 @@ The goal of the paper is to use **value** and **momentum** as factors to predict
     * This way, even if a signal for a security is disproportionally large, it won't be given a disproportionally large weight
     * Since it allows for positive and negative signals, all signals add to 0
 
+# More AQR factors
+AQR also discusses two more factors - Quality and Low Risk
+## Quality
+Quality refers to the fundamentals of a business. Quality looks for companies with **strong** fundamentals, rather than instrinsic valuation compared to market valuation.
+* Justification: Companies with high quality tend to be more resilient, and lead in growth. As a result, they can provide *consistent returns* and *minimise risk*
+* Metrics to use as quality signals: Profitability ratios, balance sheet health, earnings consistency.
+
+## Low risk
+Low risk looks for securities with low price volatility, steady performance
+* Justification: These qualities imply that the security will remain stable in the future, maintaining low risk for a portfolio
+* Metrics: Returns Volatility (e.g. Std Dev of returns) & Equity Beta
 
 # Reflections from the 12-2 Momentum Ranking Task
 In this task, I graph the 12-2 momentum ranking of 20 separate tickers, comparing that with the 1-month return of the subsequent month. Here, since momentum is our signal, the ranking of return should correspond with the ranking of momentum.
@@ -46,4 +57,4 @@ In order to simulate how a long-short portfolio of these 20 stocks would perform
 ![List of stock performance](/Users/architsharma/Python/Quant_Project/Images/Portfolio_Sim.png)
 
 
-**Why?** This could be due to general market movements in the past year, such as the memory squeeze and oil shortage, muddying the momentum effect.
+**Why?** This could be due to general bear market movements in the past year, such as the memory squeeze and oil shortage, muddying the momentum effect.

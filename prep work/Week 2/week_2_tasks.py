@@ -123,8 +123,24 @@ def momentum_ranking():
     plt.tight_layout()
     plt.show()
 
-def value_quality_metrics():
-    pass
+def value_quality_factors():
+    """
+    Building on the Long-Short portfolio work from the last task, this task uses both value and quality as factors deciding which positions to take for my 20-stock portfolio.
+    Both factors are constructed with more information this time:
+    The P/B and P/E ratios of the company combine to form a composite value factor
+    The ROE and Gross Margin of the company combine to form a composite quality factor
+
+    Factor construction:
+    * Standardise ratios such that `higher` indicates `stronger signal for returns` --> Invert P/E and P/B
+
+    Weighting of stocks:
+    * Same as before, using ranking system
+    * As each factor uses 2 statistics, factor weight = mean(statistic 1 weight, statistic 2 weight)
+    """
+    # Modify the {tickername: tickerobj} dict: `stocks`
+    for security in securities:
+        ticker = stocks[security]
+        stocks[security] = {"P/E": 1, "P/B": 1, "ROE": 1, "Gross Margin": 1}
 
 if __name__ == '__main__':
     momentum_ranking()
