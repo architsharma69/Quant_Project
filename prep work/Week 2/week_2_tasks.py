@@ -4,6 +4,7 @@ from matplotlib.ticker import MultipleLocator
 import numpy as np
 import math
 from datetime import datetime
+import pandas as pd
 
 today_date = datetime.now()
 
@@ -44,29 +45,76 @@ def cross_sectional_returns():
     plt.tight_layout()
     plt.show()
 
-def long_short_portfolio(signal_rank, returns):
+def long_short_portfolio(signals: pd.DataFrame, factor_signal_map: dict, test_returns: pd.DataFrame = None):
     """
-    `signal_rank` is a dict which maps security name --> ranking, `returns` is a dict which maps security name --> next month return, in % return
+    ## Purpose
+    Simulates a long-short portfolio taking in raw signal values of each security and a key which maps factors to raw signals
+
+    ## Variables:
+    * `signals`: `pd.DataFrame`. 
+        * Contains all the security info
+        * Securities as columns, ColumnName is the Security Name
+        * Raw Signal Values as rows, RowName is the Signal Name
+
+    * `factor_signal_map`: `dict`
+        * While raw signals are ratios such as P/E or P/B, a factor is a specific characteristic of the security, such as value, quality, or momentum, that we measure using the raw signals
+        * Maps the factor name to its constituent signals, e.g. `quality`: ['ROE']
+        * Format of map given by: `str`: `list[str]`
+        * In case a factor is a composition of multiple signals, the list must contain all those signals. 
+        * Signal names must match exactly to the row names in `signals`
+        * For any signal name (one of the rows from `signals`) that is not found in `composite_factor_map`, it is treated as an individual factor
+    
+    ## Functions
+    1. Uses raw signal data to rank stocks by raw signal data
+    2. Generates Factor weights for each stock
+        * If Factor is composed of multiple signals, takes average signal rank and calculates weight
+        * Weight is calculated by distance between Factor rank and Average rank, scaled down so that the long and short sides add up to $1 each
+    
+    ## Current Assumptions
+    * Raw signal data is *standardised*, i.e.
+        * All raw signal data points higher for better, lower for worse
+    * Magnitude of industry-dependent signals are adjusted by industry.
+    * Missing / Invalid raw signal information is substituted for the *industry average signal value*
     """
-    num = len(signal_rank.keys())           # Just the number of securities
 
-    # Scaling Factor: The weight for each stock tells us how much of our capital we are putting in that stock.
-    # In a portfolio with $1 long and $1 short, the weights on both sides must add up to one respectively, since the total capital on each side is $1
-    # Now, the raw weight comes from the difference of the security's ranking from the mean ranking, then,
-    # Final weight is raw weight normalised, i.e. divided by sum of all raw weights
-    raw_weights = [rank - ((num + 1) / 2) for rank in range(math.ceil(num / 2) + 1, num + 1, 1)]
+    securities = signals.columns.tolist()
+    signal_names = signals.index.tolist()
+    print(f'Columns: {securities} \nRows: {signal_names}')
+    n = len(securities)   # Just the number of securities
 
+    print(f'raw signal values: \n{signals}')
+    # We rank all securities by each raw signal. Create new df `ranks`
+    ranks = signals.transform(
+        lambda row: row.rank(),
+        axis = 1
+    )
+    print(f'raw signal ranks: \n{ranks}')
+
+    # Create another df `factors` to rank by factor, switching out raw signal name for factor name and aggregating raw signal ranks for any composite factors
+    factors = pd.DataFrame(columns=pd.Series(securities))
+    for factor in factor_signal_map.keys():
+        constituent_signals = factor_signal_map[factor]
+        grouped_signal_ranks = ranks.loc[constituent_signals]
+        factor_ranks = grouped_signal_ranks.mean(axis = 0)
+        factors.loc[factor] = factor_ranks
+    print(f'factors: \n{factors}')
+    
+    # Construct the map from signal ranking --> weights
+        # Scaling Factor: The weight for each stock tells us how much of our capital we are putting in that stock.
+        # In a portfolio with $1 long and $1 short, the weights on both sides must add up to one respectively, since the total capital on each side is $1
+        # Now, the raw weight comes from the difference of the security's ranking from the mean ranking, then,
+        # Final weight is raw weight normalised, i.e. divided by sum of all raw weights
+    raw_weights = [rank - ((n + 1) / 2) for rank in range(math.ceil(n / 2) + 1, n + 1, 1)]
     scaling_factor = 1 / sum(raw_weights)
+    weight = lambda rank: (rank - (n + 1) / 2) * scaling_factor 
 
-    weight = lambda sec: (signal_rank[sec] - (num + 1) / 2) * scaling_factor # Negative weight means sell, positive means buy
-
-    print("\n################# Simulate a Long-Short Portfolio, with $2 capital injection ######################")
-    for sec in securities:
-        print(f'{sec}: Weight = {weight(sec)}, % Return = {round(returns[sec], 4)}, Absolute return = {round(returns[sec] * weight(sec), 4)}        {'PROFIT' if returns[sec] * weight(sec) > 0 else 'LOSS'}')
-    abs_returns = sum([(returns[sec] / 100) * weight(sec) for sec in securities]) # return * weight gives us the absolute return to the portfolio due to that security
-    rel_returns = (abs_returns / 2) * 100
-
-    return (2 + abs_returns, rel_returns)
+    # Create new df `weights`, to hold the final weights by each factor
+    weights = factors.transform(
+        lambda row: row.apply(weight),
+        axis = 1
+        )
+    print(f'weights: \n{weights}')
+    return weights
 
 
 def momentum_ranking():
@@ -143,4 +191,15 @@ def value_quality_factors():
         stocks[security] = {"P/E": 1, "P/B": 1, "ROE": 1, "Gross Margin": 1}
 
 if __name__ == '__main__':
-    momentum_ranking()
+    signals = pd.DataFrame(
+        {'Stock1': [3,6,10],
+         'Stock2': [1,5,9],
+         'Stock3': [2,8,6],
+         'Stock4': [4,7,12]},
+         index = ['Sig1', 'Sig2', 'Sig3']
+    )
+    factormap = {
+        'Fac1': ['Sig1'],
+        'Fac2': ['Sig2', 'Sig3'],
+    }
+    long_short_portfolio(signals, factormap)
